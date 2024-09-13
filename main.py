@@ -1,6 +1,8 @@
 from tabulate import tabulate
 import requests
 from bs4 import BeautifulSoup
+import subprocess
+from cgitb import text
 
 
 # Here's what's next:
@@ -15,6 +17,7 @@ from bs4 import BeautifulSoup
 # scrape html from torrent site                                                         #
 #########################################################################################
 url = "https://1337x.to/popular-music"
+url_prefix = "https://1337x.to"
 response = requests.get(url)
 webpage = response.text
 soup = BeautifulSoup(webpage, "lxml")
@@ -101,17 +104,43 @@ print(table_1)
 #########################################################################################
 # ask user to choose which torrent and select index the appropriate index               #
 # #######################################################################################
-num_of_items = len(list_of_lists - 1)
-torrent_to_be_downladed = input(
-    f"please choose the torrent you want to download {0 - num_of_items}: "
+num_of_items = len(list_of_lists)
+torrent_to_be_downladed = int(
+    input(f"please choose the torrent you want to download 0 - {num_of_items - 1}: ")
 )
-print(f"you have chosen to donwlaod: {link_dict[torrent_to_be_downladed]}")
 
+print(f"you have chosen to downlaod: {link_dict[torrent_to_be_downladed]}")
 
-# make request to link chosen by user and download the .torret file
+this_torrent = f"{url_prefix}{link_dict[torrent_to_be_downladed]}"
+
+########################################################################################
+# get torrent link from torrent webpage                                                #
+# ######################################################################################
+
+# get html from chosen torrent page
+this_torrent_response = requests.get(this_torrent)
+this_torrent_webpage = this_torrent_response.text
+torrent_soup = BeautifulSoup(this_torrent_webpage, "lxml")
+# drop_down = torrent_soup.find(".dropdown-menu")
+# print(drop_down)
+
+# link to download torrent file is in a dropdown-menu
+# will most likely need to use selenium to click dropdown-menu and torrent download link
+
 # need to test both requests and urllib to download .torrent files from torrent site
 # test torrent dowload using urllib
 # https:stackoverflow.com/questions/46174458/how-to-download-torrent-file
+
+##########################################################################################
+# Use xdg-open to download .torrent file                                                 #
+##########################################################################################
+
+# subprocess.Popen(
+#    ["xdg-open", ""], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+# )
+
+# print(".torrent file has been downoaded, please check Downloads folder")
+
 
 # torrents = soup.select(".table-list")
 # print(torrents)
