@@ -2,8 +2,10 @@ from tabulate import tabulate
 import requests
 from bs4 import BeautifulSoup
 import subprocess
-from cgitb import text
-
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver import Keys
+import time
 
 # Here's what's next:
 # Get all the hrefs for each torrent and store them in a dictionary ie (dict = {column_index: torrent_link})
@@ -21,7 +23,6 @@ url_prefix = "https://1337x.to"
 response = requests.get(url)
 webpage = response.text
 soup = BeautifulSoup(webpage, "lxml")
-
 
 #########################################################################################
 # get the column headers to the table of torrents (name, se, le, time, size, uploader)  #
@@ -118,14 +119,55 @@ this_torrent = f"{url_prefix}{link_dict[torrent_to_be_downladed]}"
 # ######################################################################################
 
 # get html from chosen torrent page
-this_torrent_response = requests.get(this_torrent)
-this_torrent_webpage = this_torrent_response.text
-torrent_soup = BeautifulSoup(this_torrent_webpage, "lxml")
+# this_torrent_response = requests.get(this_torrent)
+# this_torrent_webpage = this_torrent_response.text
+# torrent_soup = BeautifulSoup(this_torrent_webpage, "lxml")
 # drop_down = torrent_soup.find(".dropdown-menu")
 # print(drop_down)
 
 # link to download torrent file is in a dropdown-menu
 # will most likely need to use selenium to click dropdown-menu and torrent download link
+
+########################################################################################
+# get drop-down menu of torrent link with selenium
+# ######################################################################################
+
+options = webdriver.ChromeOptions()
+
+options.add_experimental_option("detach", True)
+
+driver = webdriver.Chrome(options=options)
+
+driver.get(this_torrent)
+
+time.sleep(10)
+
+# "/html/body/main/div/div/div/div[2]/div[1]/ul[1]/li[6]/a/span/i"
+
+torrent_download_button = driver.find_element(
+    By.CSS_SELECTOR, ".ldef89ceb6354608d1d6bfbe77ab5ab1c5f07c14c"
+).click()
+
+# (By.XPATH, "/html/body/main/div/div/div/div[2]/div[1]/ul[1]/li[5]/a").click()
+
+print("torrent button clicked")
+
+
+# once link is clicked a new tab opens need to get titles of both tabs and stay on original tab
+
+time.sleep(15)
+
+for handle in driver.window_handles:
+    print(driver.title)
+
+
+# itorrents_mirror = driver.find_element(
+#    By.XPATH, "/html/body/main/div/div/div/div[2]/div[1]/ul[1]/li[6]/ul/li[1]/a"
+# ).click()
+
+# itorrents_mirror.click()
+
+# print(f".torrent file has been downloaded. please check downloads directory")
 
 # need to test both requests and urllib to download .torrent files from torrent site
 # test torrent dowload using urllib
