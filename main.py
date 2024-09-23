@@ -4,16 +4,30 @@ from bs4 import BeautifulSoup
 import subprocess
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver import Keys
+
+# from selenium.webdriver import Keys
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 import time
 
-# Here's what's next:
-# Get all the hrefs for each torrent and store them in a dictionary ie (dict = {column_index: torrent_link})
-# Give user ability to select torrent based on index in torrent table.
-# Once user selects the index then get the href for that column from dictionary.
-# Scape that specific torrent page for .torrent file or magnet link and download to Downloads directory
-# where transadd script gets called to add file to transmission client
-# will add search functionality at a later date...working with popular music page for now.
+
+# TODOs
+# Below have been implemeted as of 09/23
+#   Get all the hrefs for each torrent and store them in a dictionary ie (dict = {column_index: torrent_link})
+#   Give user ability to select torrent based on index in torrent table.
+#   Once user selects the index then get the href for that column from dictionary.
+#   Scape that specific torrent page for .torrent file or magnet link and download to Downloads directory.
+
+# Next up
+# add search functionality
+#   user argppare to allow user to search for torrents by category (https://1337x.to/category-search/miles%20davis/Music/1/)
+#   Categories
+#       Music
+#       Movies
+#       TV
+#       Games
+#       Applcation
+
 
 #########################################################################################
 # scrape html from torrent site                                                         #
@@ -145,7 +159,7 @@ time.sleep(10)
 # "/html/body/main/div/div/div/div[2]/div[1]/ul[1]/li[6]/a/span/i"
 
 torrent_download_button = driver.find_element(
-    By.CSS_SELECTOR, ".ldef89ceb6354608d1d6bfbe77ab5ab1c5f07c14c"
+    By.CSS_SELECTOR, "li.dropdown > a"
 ).click()
 
 # (By.XPATH, "/html/body/main/div/div/div/div[2]/div[1]/ul[1]/li[5]/a").click()
@@ -155,20 +169,35 @@ print("torrent button clicked")
 
 # once link is clicked a new tab opens need to get titles of both tabs and stay on original tab
 
-time.sleep(15)
-
-for handle in driver.window_handles:
-    print(driver.title)
+# time.sleep(15)
 
 
-# itorrents_mirror = driver.find_element(
-#    By.XPATH, "/html/body/main/div/div/div/div[2]/div[1]/ul[1]/li[6]/ul/li[1]/a"
-# ).click()
+windows_before = driver.current_window_handle
+print(windows_before)
+WebDriverWait(driver, 10).until(EC.number_of_windows_to_be(2))
+windows_after = driver.window_handles
+new_window = [x for x in windows_after if x != windows_before][0]
+driver.switch_to.window(new_window)
+time.sleep(10)
+print(new_window)
+driver.close()
+driver.switch_to.window(windows_before)
+
+#######################################################################################
+# Get url to .torrent file from dropdown-menu
+######################################################################################
+
+itorrents_mirror = driver.find_element(
+    By.CSS_SELECTOR, "ul.dropdown-menu > li > a"
+).get_attribute("href")
 
 # itorrents_mirror.click()
 
-# print(f".torrent file has been downloaded. please check downloads directory")
+print(itorrents_mirror)
 
+driver.quit()
+
+# print(f".torrent file has been downloaded. please check downloads directory")
 # need to test both requests and urllib to download .torrent files from torrent site
 # test torrent dowload using urllib
 # https:stackoverflow.com/questions/46174458/how-to-download-torrent-file
@@ -177,11 +206,13 @@ for handle in driver.window_handles:
 # Use xdg-open to download .torrent file                                                 #
 ##########################################################################################
 
-# subprocess.Popen(
-#    ["xdg-open", ""], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-# )
+subprocess.Popen(
+    ["xdg-open", itorrents_mirror], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+)
 
-# print(".torrent file has been downoaded, please check Downloads folder")
+print(".torrent file has been downloaded, please check Downloads folder")
+
+print("Done.")
 
 
 # torrents = soup.select(".table-list")
